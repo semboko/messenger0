@@ -6,7 +6,7 @@ from time import sleep
 from typing import List, Optional
 
 from screen import Screen
-from elements import ScreenTitle, TextInput, Button, MessagesList
+from elements import ScreenTitle, TextInput, Button, MessagesList, Contacts
 from storage import local_storage
 
 
@@ -42,6 +42,9 @@ main_screen.add_element(
 main_screen.add_element(
     MessagesList(Vector2(20, 180), Vector2(SCREEN_WIDTH - 40, 500))
 )
+main_screen.add_element(
+    Contacts(Vector2(20, 20), Vector2(100, 30), Vector2(300, SCREEN_HEIGH - 40))
+)
 
 
 class Messenger:
@@ -60,10 +63,10 @@ class Messenger:
 
     def launch(self) -> None:
         self.receiver = Thread(target=local_storage.receive_messages, args=(self, ))
-        self.receiver.start()
+        # self.receiver.start()
 
         self.sender = Thread(target=local_storage.message_sender, args=(self, ))
-        self.sender.start()
+        # self.sender.start()
 
         if self.active_screen is None:
             raise Exception("At least one screen must be active")
