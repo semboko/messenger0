@@ -7,7 +7,7 @@ from pygame.draw import rect
 from pygame.rect import Rect
 from pygame.event import Event
 from storage import local_storage
-from typing import Callable
+from typing import Callable, List
 
 
 class BaseElement:
@@ -39,6 +39,7 @@ class TextInput(BaseElement):
         self.label_surface = label_font.render(self.label, True, (150, 150, 150), (255, 255, 255))
 
         self.txt_font = Font("Quicksand-Regular.ttf", 25)
+        self.hints_font = Font("Quicksand-Regular.ttf", 15)
 
     def handle_mouseclick(self, event: Event) -> None:
         print(f"input {id(self)} was clicked")
@@ -63,6 +64,15 @@ class TextInput(BaseElement):
             input_value += "|"
         txt_surface = self.txt_font.render(input_value, True, (50, 50, 50))
         screen.blit(txt_surface, self.pos + Vector2(10, self.size.y/2 - txt_surface.get_height()/2))
+
+    def draw_hints(self, screen: Surface, hints: List[str], is_active: bool) -> None:
+        if not is_active:
+            return
+        hints_rect = Rect(
+            self.pos + Vector2(10, self.size.y),
+            Vector2(self.size.x - 20, 100)
+        )
+        pygame.draw.rect(screen, (150, 150, 150), hints_rect)
 
 
 class Button(BaseElement):
@@ -157,9 +167,17 @@ class Contacts(BaseElement):
         self.close_btn = Button(self.pos + Vector2(10, 10), Vector2(20, 20), "X", print)
         self.contact_items = self.create_contact_items()
 
+        self.search_input = TextInput(
+            self.pos + Vector2(10, 50),
+            Vector2(self.shown_size.x - 20, 40),
+            "Search",
+            "search_input",
+        )
+        self.search_is_active = False
+
     def create_contact_items(self):
         result = []
-        pos = self.pos + Vector2(10, 60 + self.title_img.get_height() + 20)
+        pos = self.pos + Vector2(10, 100 + self.title_img.get_height() + 20)
         for contact in local_storage["contacts"]:
             item = ContactItem(pos.copy(), contact)
             result.append(item)
@@ -175,12 +193,22 @@ class Contacts(BaseElement):
         if self.close_btn.get_rect().collidepoint(event.pos):
             self.hidden = True
             self.size = self.hidden_size
+            self.search_is_active = False
+
+        if self.search_input.get_rect().collidepoint(event.pos):
+            self.search_is_active = True
+            return
+
+        self.search_is_active = False
+
+    def handle_keyboard(self, event: Event) -> None:
+        self.search_input.handle_keyboard(event)
 
     def draw(self, screen: Surface, is_active: bool = False):
         outline = Rect(self.pos, self.size)
         width = 1 if self.hidden else 0
-        rect(screen, (150, 150, 150), outline, width, 5)
-        title_pos = Vector2(10, 2) if self.hidden else Vector2(10, 60)
+        rect(screen, (200, 200, 200), outline, width, 5)
+        title_pos = Vector2(10, 2) if self.hidden else Vector2(10, 100)
         screen.blit(self.title_img, self.pos + title_pos)
 
         if not self.hidden:
@@ -190,3 +218,7 @@ class Contacts(BaseElement):
             # Draw list of contacts
             for item in self.contact_items:
                 item.draw(screen)
+
+            # Draw search input
+            self.search_input.draw(screen, self.search_is_active)
+            self.search_input.draw_hints(screen, local_storage["contact_hints"], self.search_is_active)

@@ -85,3 +85,4 @@ local_storage["is_authorized"] = True
 local_storage["queue"] = []
 local_storage["messages"] = []
 local_storage["contacts"] = ["user999", "simon1", "luka22"]
+local_storage["contact_hints"] = ["user999", "user8854", "user11234"]
