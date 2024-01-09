@@ -47,6 +47,20 @@ class LocalStorage(dict):
         # print(result)
         self["current_message"] = ""
 
+    def get_contacts(self):
+        res = server_get("/contacts", {})
+        if res.status_code != 200:
+            print(res.text)
+
+        data = res.json()
+        print(data)
+
+        self["contacts"] = data
+
+
+    def get_contact_hints(self):
+        pass
+
     def message_sender(self, app):
         while not app._exit:
             redis = self["redis"]
@@ -84,5 +98,5 @@ local_storage["redis"] = None
 local_storage["is_authorized"] = True
 local_storage["queue"] = []
 local_storage["messages"] = []
-local_storage["contacts"] = ["user999", "simon1", "luka22"]
-local_storage["contact_hints"] = ["user999", "user8854", "user11234"]
+local_storage["contacts"] = []
+local_storage["contact_hints"] = []

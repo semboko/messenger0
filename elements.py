@@ -68,11 +68,27 @@ class TextInput(BaseElement):
     def draw_hints(self, screen: Surface, hints: List[str], is_active: bool) -> None:
         if not is_active:
             return
+        origin = self.pos + Vector2(10, self.size.y)
+
+        item_coordinates = []
+        item_surfaces = []
+
+        item_pos = origin + Vector2(5, 5)
+        for hint in hints:
+            hint_surface = self.hints_font.render(hint, True, (255, 255, 255))
+            item_surfaces.append(hint_surface)
+            item_coordinates.append(item_pos)
+            h = hint_surface.get_height()
+            item_pos = item_pos + Vector2(0, h + 5)
+
         hints_rect = Rect(
-            self.pos + Vector2(10, self.size.y),
-            Vector2(self.size.x - 20, 100)
+            origin,
+            Vector2(self.size.x - 20, item_pos.y - origin.y)
         )
         pygame.draw.rect(screen, (150, 150, 150), hints_rect)
+
+        for i in range(len(item_coordinates)):
+            screen.blit(item_surfaces[i], item_coordinates[i])
 
 
 class Button(BaseElement):
