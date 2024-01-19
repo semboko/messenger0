@@ -7,7 +7,7 @@ from pygame.draw import rect
 from pygame.rect import Rect
 from pygame.event import Event
 from storage import local_storage
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 
 class BaseElement:
@@ -40,6 +40,8 @@ class TextInput(BaseElement):
 
         self.txt_font = Font("Quicksand-Regular.ttf", 25)
         self.hints_font = Font("Quicksand-Regular.ttf", 15)
+
+        self.last_hints_rect: Optional[Rect] = None
 
     def handle_mouseclick(self, event: Event) -> None:
         print(f"input {id(self)} was clicked")
@@ -81,11 +83,11 @@ class TextInput(BaseElement):
             h = hint_surface.get_height()
             item_pos = item_pos + Vector2(0, h + 5)
 
-        hints_rect = Rect(
+        self.last_hints_rect = Rect(
             origin,
             Vector2(self.size.x - 20, item_pos.y - origin.y)
         )
-        pygame.draw.rect(screen, (150, 150, 150), hints_rect)
+        pygame.draw.rect(screen, (150, 150, 150), self.last_hints_rect)
 
         for i in range(len(item_coordinates)):
             screen.blit(item_surfaces[i], item_coordinates[i])
@@ -204,6 +206,8 @@ class Contacts(BaseElement):
         if self.hidden:
             self.size = self.shown_size
             self.hidden = False
+            local_storage.get_contacts()
+            self.contact_items = self.create_contact_items()
             return
 
         if self.close_btn.get_rect().collidepoint(event.pos):
@@ -213,12 +217,27 @@ class Contacts(BaseElement):
 
         if self.search_input.get_rect().collidepoint(event.pos):
             self.search_is_active = True
+            local_storage.get_contact_hints()
             return
+
+        hints_rect = self.search_input.last_hints_rect
+        if hints_rect is not None:
+            if hints_rect.collidepoint(event.pos):
+                item_pos = Vector2(hints_rect.topleft) + Vector2(5, 5)
+                item_height = self.search_input.hints_font.get_height()
+
+                for item in local_storage["contact_hints"]:
+                    item_rect = Rect(item_pos, Vector2(hints_rect.width, item_height))
+                    if item_rect.collidepoint(event.pos):
+                        local_storage.add_friend(item)
+                        self.contact_items = self.create_contact_items()
+                    item_pos = item_pos + Vector2(0, item_height + 5)
 
         self.search_is_active = False
 
     def handle_keyboard(self, event: Event) -> None:
         self.search_input.handle_keyboard(event)
+        local_storage.get_contact_hints()
 
     def draw(self, screen: Surface, is_active: bool = False):
         outline = Rect(self.pos, self.size)

@@ -62,6 +62,12 @@ class Messenger:
             self.active_screen = len(self.screens) - 1
 
     def launch(self) -> None:
+        token_file = open("token.txt", "r")
+        local_storage["token"] = token_file.readline()
+        if local_storage.validate_token():
+            local_storage["is_authorized"] = True
+        token_file.close()
+
         self.receiver = Thread(target=local_storage.receive_messages, args=(self, ))
         # self.receiver.start()
 
